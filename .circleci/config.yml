@@ -5,7 +5,6 @@ orbs:
   gcp-gke: circleci/gcp-gke@0.1.0
   gcloud: circleci/gcp-cli@1.0.6
   gcr: circleci/gcp-gcr@0.0.2
-  k8s: circleci/kubernetes@0.1.0
 
 rollout-image:
     description: "Update a deployment's Docker image."
@@ -120,14 +119,14 @@ jobs:
       # Initialize the `gcloud` CLI.
       - gcp-gke/init
       # Update a deployment's Docker image.
-      - gke/publish-and-rollout-image:
-                context: jalilcluster
-                deployment: jalil-backend
-                image: gcr.io/fine-acronym-235020/circle-gke:v2
-                container: jalil-backend
-                cluster: jalilcluster
-                namspace: test
-                tag: "2"
+      - publish-and-rollout-image:
+            context: jalilcluster
+            deployment: jalil-backend
+            image: gcr.io/fine-acronym-235020/circle-gke:v2
+            container: jalil-backend
+            cluster: jalilcluster
+            namspace: test
+            tag: "2"
       #- gcp-gke/rollout-image:
       #   deployment: jalil-backend
       #    container: jalil-backend
