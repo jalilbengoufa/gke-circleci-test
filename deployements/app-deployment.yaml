@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - image: gcr.io/fine-acronym-235020/circle-gke:v2
-          name: test
+          name: jalil-backend
           ports:
             - containerPort: 3000
               name: test
