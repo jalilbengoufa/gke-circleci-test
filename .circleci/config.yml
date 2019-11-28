@@ -137,7 +137,7 @@ jobs:
             image: gcr.io/fine-acronym-235020/circle-gke:v2
             container: jalil-backend
             cluster: jalilcluster
-            namspace: test
+            namespace: test
       #- gcp-gke/rollout-image:
       #   deployment: jalil-backend
       #    container: jalil-backend
