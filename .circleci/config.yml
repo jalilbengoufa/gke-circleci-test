@@ -52,7 +52,7 @@ jobs:
       - gcp-gke/rollout-image:
           deployment: jalilcluster
           container: jalil-backend
-          image: us.gcr.io/fine-acronym-235020/circleci-gke:v2
+          image: gcr.io/fine-acronym-235020/circle-gke:v2
 
 workflows:
   build_update_deploy:
