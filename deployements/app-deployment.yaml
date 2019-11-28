@@ -1,21 +1,21 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: test
+  name: jalil-backend
   namespace: test
   labels:
-    app: simple-backend
+    app: jalil-backend
 spec:
   selector:
     matchLabels:
-      app: simple-backend
+      app: jalil-backend
       tier: backend
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: simple-backend
+        app: jalil-backend
         tier: backend
     spec:
       containers:
@@ -38,7 +38,7 @@ spec:
     port: 3000
   type: NodePort
   selector:
-    app: simple-backend  
+    app: jalil-backend  
     tier: backend         
 ---
 apiVersion: extensions/v1beta1
