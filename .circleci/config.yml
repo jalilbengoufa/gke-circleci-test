@@ -6,7 +6,17 @@ orbs:
   gcloud: circleci/gcp-cli@1.0.6
   gcr: circleci/gcp-gcr@0.0.2
 
-rollout-image:
+commands:
+  install:
+    description: "Install `gcloud` and `kubectl` if not already installed."
+    steps:
+      - gcloud/install
+      - k8s/install
+  init:
+    description: "Initialize the `gcloud` CLI."
+    steps:
+      - gcloud/initialize
+  rollout-image:
     description: "Update a deployment's Docker image."
     parameters:
       cluster:
@@ -20,6 +30,9 @@ rollout-image:
         type: string
       image:
         description: A name for your docker image
+        type: string
+      namespace:
+        description: A namespace
         type: string
     steps:
       - run: |
@@ -119,14 +132,12 @@ jobs:
       # Initialize the `gcloud` CLI.
       - gcp-gke/init
       # Update a deployment's Docker image.
-      - publish-and-rollout-image:
-            context: jalilcluster
+      - rollout-image:
             deployment: jalil-backend
             image: gcr.io/fine-acronym-235020/circle-gke:v2
             container: jalil-backend
             cluster: jalilcluster
             namspace: test
-            tag: "2"
       #- gcp-gke/rollout-image:
       #   deployment: jalil-backend
       #    container: jalil-backend
@@ -143,4 +154,5 @@ workflows:
       - deploy:
           requires:
             - Build-Push-Image-Docker
+
       
