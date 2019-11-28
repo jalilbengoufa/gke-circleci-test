@@ -1,46 +1,43 @@
 version: 2.1
 
-# Orb Dependencies
 orbs:
   node: circleci/node@1.1.6
-  gcloud: circleci/gcp-cli@1.0.6
+  gcp-gke: circleci/gcp-gke@0.1.0
   gcr: circleci/gcp-gcr@0.0.2
-  k8s: circleci/kubernetes@0.1.0
-
-commands:
-  install:
-    description: "Install `gcloud` and `kubectl` if not already installed."
-    steps:
-      - gcloud/install
-      - k8s/install
-  init:
-    description: "Initialize the `gcloud` CLI."
-    steps:
-      - gcloud/initialize
-  rollout-image:
-    description: "Update a deployment's Docker image."
-    parameters:
-      cluster:
-        description: "The Kubernetes cluster name."
-        type: string
-      deployment:
-        description: "The Kubernetes deployment name."
-        type: string
-      container:
-        description: "The Kubernetes container name."
-        type: string
-      image:
-        description: A name for your docker image
-        type: string
-      namespace:
-        description: namespace of the app
-        type: string
-    steps:
-      - run: |
-          gcloud container clusters get-credentials <<parameters.cluster>>
-          kubectl set image deployment <<parameters.deployment>> -n <<parameters.namespace>> <<parameters.container>>=<<parameters.image>>
 
 jobs:
+  build:
+    description: Install npm
+    # machine option runs your jobs in a dedicated, ephemeral VM that has the following specifications:
+    machine: true
+    steps:
+      - checkout
+      # Install node
+      - node/install
+      # Install npm
+      - node/install-npm
+      # Download and cache dependencies
+      - node/with-cache:
+          steps:
+            - run:
+                name: Install application dependencies
+                command: npm install
+          # Save cache
+          cache-key: package.json
+          # Ignore non-checksum cache hits
+          use-strict-cache: true
+  Build-Push-Image-Docker:
+    description: Build and push image to Google Container Registry
+    machine: true
+    steps:
+      - checkout
+      - gcr/gcr-auth
+      - gcr/build-image:
+          image: circle-gke
+          tag: "v2"
+      - gcr/push-image:
+          image: circle-gke
+          tag: "v2"
   publish-and-rollout-image:
     description: "Update cluster with new Docker image."
     machine: true
@@ -82,44 +79,42 @@ jobs:
         type: string
         default: "."
     steps:
-      - checkout
-      - gcr/gcr-auth:
-          google-project-id: <<parameters.google-project-id>>
-          google-compute-zone: <<parameters.google-compute-zone>>
-      - install
-      - gcr/build-image:
-          registry-url: <<parameters.registry-url>>
-          google-project-id: <<parameters.google-project-id>>
-          image: <<parameters.image>>
-          tag: << parameters.tag >>
-          path-to-dockerfile: <<parameters.path-to-dockerfile>>
-      - gcr/push-image:
-          registry-url: <<parameters.registry-url>>
-          google-project-id: <<parameters.google-project-id>>
-          image: <<parameters.image>>
-          tag: <<parameters.tag>>
       - rollout-image:
           cluster: "<<parameters.cluster>>"
           deployment: "<<parameters.deployment>>"
           container: "<<parameters.container>>"
           image: "<<parameters.image>>"
-
-example:
-  publish-and-rollout-image:
-    description: |
-      "The simplest example of using this Orb. Logs into GCP, builds and 
-      publishes a Docker image, and then rolls the image out to a GKE cluster."
-    usage:
-      version: 2.1
-      orbs:
-        gke: fine-acronym-235020/circle-gke:v2
-      workflows:
-        main:
-          jobs:
-            - build
-            - gke/publish-and-rollout-image:
-                context: gcp-testing
+    
+  deploy:
+    description: Deploy application to Google Kubernetes Engine
+    machine: true
+    steps:
+      # Install `gcloud` and `kubectl` if not already installed.
+      - gcp-gke/install
+      # Initialize the `gcloud` CLI.
+      - gcp-gke/init
+      # Update a deployment's Docker image.
+      - gke/publish-and-rollout-image:
+                context: jalilcluster
                 deployment: jalil-backend
-                image: jalil-backend
+                image: gcr.io/fine-acronym-235020/circle-gke:v2
+                container: jalil-backend
+                cluster: jalilcluster
                 tag: "2"
-                namespace: test
+      #- gcp-gke/rollout-image:
+      #   deployment: jalil-backend
+      #    container: jalil-backend
+      #    image: gcr.io/fine-acronym-235020/circle-gke:v2
+      
+
+workflows:
+  build_update_deploy:
+    jobs:
+      - build
+      - Build-Push-Image-Docker:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - Build-Push-Image-Docker
+      
