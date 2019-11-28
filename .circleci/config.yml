@@ -3,8 +3,29 @@ version: 2.1
 orbs:
   node: circleci/node@1.1.6
   gcp-gke: circleci/gcp-gke@0.1.0
+  gcloud: circleci/gcp-cli@1.0.6
   gcr: circleci/gcp-gcr@0.0.2
+  k8s: circleci/kubernetes@0.1.0
 
+rollout-image:
+    description: "Update a deployment's Docker image."
+    parameters:
+      cluster:
+        description: "The Kubernetes cluster name."
+        type: string
+      deployment:
+        description: "The Kubernetes deployment name."
+        type: string
+      container:
+        description: "The Kubernetes container name."
+        type: string
+      image:
+        description: A name for your docker image
+        type: string
+    steps:
+      - run: |
+          gcloud container clusters get-credentials <<parameters.cluster>>
+          kubectl set image deployment <<parameters.deployment>> -n <<parameters.namespace>> <<parameters.container>>=<<parameters.image>>
 jobs:
   build:
     description: Install npm
@@ -78,12 +99,17 @@ jobs:
         description: The relative path to the Dockerfile to use when building image
         type: string
         default: "."
+      namespace:
+        description: the app namespace
+        type: string
+        default: "test"
     steps:
       - rollout-image:
           cluster: "<<parameters.cluster>>"
           deployment: "<<parameters.deployment>>"
           container: "<<parameters.container>>"
           image: "<<parameters.image>>"
+          namespace: "<<parameters.namespace>>"
     
   deploy:
     description: Deploy application to Google Kubernetes Engine
@@ -100,6 +126,7 @@ jobs:
                 image: gcr.io/fine-acronym-235020/circle-gke:v2
                 container: jalil-backend
                 cluster: jalilcluster
+                namspace: test
                 tag: "2"
       #- gcp-gke/rollout-image:
       #   deployment: jalil-backend
