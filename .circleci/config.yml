@@ -50,7 +50,7 @@ jobs:
       - gcp-gke/init
       # Update a deployment's Docker image.
       - gcp-gke/rollout-image:
-          deployment: jalil-backend
+          deployment: jalilcluster
           container: jalil-backend
           image: gcr.io/fine-acronym-235020/circle-gke:v2
 
