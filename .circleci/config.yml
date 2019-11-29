@@ -73,7 +73,7 @@ jobs:
       # Update a deployment's Docker image.
       - rollout-image:
           deployment: jalil-backend
-          image: gcr.io/fine-acronym-235020/circle-gke:v1
+          image: gcr.io/fine-acronym-235020/circle-gke:v3
           container: jalil-backend
           cluster: jalilcluster
           namespace: test
