@@ -19,7 +19,7 @@ spec:
         tier: backend
     spec:
       containers:
-        - image: gcr.io/fine-acronym-235020/circle-gke:v2
+        - image: gcr.io/fine-acronym-235020/circle-gke:v1
           name: jalil-backend
           ports:
             - containerPort: 3000
